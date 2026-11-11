@@ -1,0 +1,20 @@
+#!/bin/sh
+# Personal OS pre-commit guard.
+# 1) auto-stamp `updated:` on changed owners, refresh + validate the block graph;
+# 2) block secrets and private paths.
+# Setup on a fresh clone: git config core.hooksPath .githooks
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+if ! command -v pos >/dev/null 2>&1; then
+  echo "pre-commit BLOCK: 'pos' is not installed (pipx install personal-os)." >&2
+  exit 1
+fi
+pos check --write --stamp --check --staged || { echo "pre-commit BLOCK: fix the block graph errors above." >&2; exit 1; }
+git add 00-meta/generated/block-state.md
+
+bad=$(printf '%s\n' "$staged" | grep -E '^private/|(^|/)\.env(\.|$)|\.pem$|\.key$|(^|/)id_(rsa|ed25519)')
+if [ -n "$bad" ]; then
+  echo "pre-commit BLOCK: private path(s) staged:" >&2; printf '%s\n' "$bad" >&2; exit 1
+fi
+pos scan --staged --patterns-only || { echo "pre-commit BLOCK: move secrets to a password manager." >&2; exit 1; }

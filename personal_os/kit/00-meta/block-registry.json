@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "generated_snapshot": "00-meta/generated/block-state.md",
+  "root_dashboard": "Home.md",
+  "current_context": "00-meta/current-context.md",
+  "budget": { "target_tokens": 20000, "max_tokens": 25000 },
+  "blocks": [
+    { "id": "meta", "kind": "system", "owner": "00-meta/current-context.md", "depends_on": ["self", "learning", "projects"] },
+    { "id": "self", "kind": "domain", "owner": "10-self/_home.md", "depends_on": ["learning", "projects"] },
+    { "id": "learning", "kind": "domain", "owner": "20-learning/_home.md", "depends_on": ["self"] },
+    { "id": "projects", "kind": "domain", "owner": "30-projects/_home.md", "depends_on": ["self", "example-project"] },
+    { "id": "example-project", "kind": "project", "owner": "30-projects/example-project/_home.md", "depends_on": ["projects", "self"] }
+  ],
+  "external_blocks": []
+}

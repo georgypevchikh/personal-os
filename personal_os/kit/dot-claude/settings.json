@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && pos check --write >&2 || exit 1; echo '=== Personal OS: auto-injected state ==='; for f in 00-meta/current-context.md 00-meta/generated/block-state.md 00-meta/block-sync.md; do [ -f \"$f\" ] && cat \"$f\" && echo; done; LOG=\"00-meta/sessions/$(date +%Y-%m-%d).md\"; [ -f \"$LOG\" ] && echo '## Today (last 50 lines)' && tail -n 50 \"$LOG\"; echo '=== Next: read 00-meta/agent-soul.md ==='"
+          }
+        ]
+      }
+    ]
+  }
+}

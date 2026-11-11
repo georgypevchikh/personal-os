@@ -1,0 +1,7 @@
+#!/bin/sh
+# Public-repo guard: nothing reaches the index that fails the privacy gate.
+# Uses the PRIVATE denylist from ~/.config/personal-os/denylist.txt (never committed).
+# Setup: git config core.hooksPath .githooks
+POS="${POS:-pos}"
+command -v "$POS" >/dev/null 2>&1 || POS="$(git rev-parse --show-toplevel)/.venv/bin/pos"
+"$POS" scan --staged || { echo "pre-commit BLOCK: privacy gate failed (see above)." >&2; exit 1; }

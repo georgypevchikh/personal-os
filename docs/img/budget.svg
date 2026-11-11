@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 200" width="960" height="200" role="img" aria-label="Session orientation costs about 10 thousand tokens against a 20K target and 25K ceiling"><style>
+  .bg{fill:#ffffff} .ink{fill:#16161a} .muted{fill:#5d5d66} .faint{fill:#8b8b94}
+  .line{stroke:#e7e5df} .card{fill:#ffffff;stroke:#e7e5df} .hot{fill:#e8ecfb;stroke:#3b5bdb}
+  .acc{fill:#3b5bdb} .accs{stroke:#3b5bdb} .soft{fill:#e8ecfb} .warn{fill:#c2410c} .warns{stroke:#c2410c}
+  .warnsoft{fill:#fdf0e8} .zero{fill:#e7e5df} .edge{stroke:#8b8b94} .grey{fill:#8b8b94} .term{fill:#16161a}
+  .tt{fill:#e9e9ee} .tg{fill:#7ee2a8} .ty{fill:#ffd479} .tr{fill:#ff8f8f} .tb{fill:#9db4ff}
+  text{font-family:Inter,ui-sans-serif,-apple-system,"Segoe UI",system-ui,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,monospace}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#0d1117} .ink{fill:#e6edf3} .muted{fill:#a2a2ad} .faint{fill:#7d8590}
+    .line{stroke:#30363d} .card{fill:#161b22;stroke:#30363d} .hot{fill:#1d2340;stroke:#8ea4ff}
+    .acc{fill:#8ea4ff} .accs{stroke:#8ea4ff} .soft{fill:#1d2340} .warn{fill:#fb923c} .warns{stroke:#fb923c}
+    .warnsoft{fill:#2d1c10} .zero{fill:#30363d} .edge{stroke:#7d8590} .grey{fill:#7d8590} .term{fill:#010409}
+  }
+</style><rect class="bg" width="960" height="200" rx="14"/><text x="28.0" y="36.0" class="acc mono" font-size="11" text-anchor="start" font-weight="600" letter-spacing="1.2">COLD-START BUDGET</text><text x="28.0" y="62.0" class="ink" font-size="19" text-anchor="start" font-weight="700" >~10.7K tokens to orient an agent, measured by pos budget</text><rect class="zero" x="28" y="96" width="904.0" height="26" rx="13"/><rect class="soft" x="28" y="96" width="669.6" height="26" rx="13"/><rect class="acc" x="28" y="96" width="357.4" height="26" rx="13"/><line class="accs" x1="697.6" x2="697.6" y1="86" y2="132" stroke-width="2"/><text x="697.6" y="152.0" class="muted" font-size="12" text-anchor="middle" font-weight="400" >20K target</text><line class="warns" x1="865.0" x2="865.0" y1="86" y2="132" stroke-width="2"/><text x="865.0" y="152.0" class="muted" font-size="12" text-anchor="middle" font-weight="400" >25K ceiling (fails CI)</text><text x="375.4" y="114.0" class="bg" font-size="12.5" text-anchor="end" font-weight="700" style="fill:#fff">10,675</text><text x="28.0" y="182.0" class="faint" font-size="11.5" text-anchor="start" font-weight="400" >Entry point · current context · block graph · sync contract · agent behaviour · today&#x27;s log tail</text></svg>

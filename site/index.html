@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personal OS</title>
+<meta name="description" content="A local-first memory layer that lets AI agents work with one person across months, tools and devices.">
+<style>
+:root {
+  --bg: #fbfaf7; --surface: #ffffff; --ink: #16161a; --muted: #5d5d66; --faint: #8b8b94;
+  --line: #e7e5df; --accent: #3b5bdb; --accent-soft: #e8ecfb; --warn: #c2410c; --warn-soft: #fdf0e8;
+  --ok: #2b8a3e; --radius: 14px;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --sans: "Inter", ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111114; --surface: #18181c; --ink: #ececf0; --muted: #a2a2ad; --faint: #75757f;
+    --line: #2a2a31; --accent: #8ea4ff; --accent-soft: #1d2340; --warn: #fb923c; --warn-soft: #2d1c10; --ok: #69db7c;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--sans); }
+main { max-width: 1040px; margin: 0 auto; padding: 56px 24px 96px; }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+h1 { font-size: clamp(34px, 5.4vw, 56px); line-height: 1.05; letter-spacing: -0.03em; margin: 12px 0 18px; max-width: 16ch; }
+h2 { font-size: 26px; letter-spacing: -0.02em; margin: 0 0 6px; }
+h3 { font-size: 16px; margin: 0 0 6px; }
+.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.lede { font-size: 19px; color: var(--muted); max-width: 62ch; margin: 0; }
+.sub { color: var(--muted); margin: 0 0 24px; max-width: 70ch; }
+section { margin-top: 88px; }
+.links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600; font-size: 14px; }
+.btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn:hover { text-decoration: none; border-color: var(--accent); }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 48px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+.stat b { display: block; font-size: 30px; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 13px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.story { display: grid; align-content: start; gap: 10px; }
+.story .row { display: grid; grid-template-columns: 92px 1fr; gap: 10px; font-size: 14.5px; }
+.story .k { font: 600 11px/1.9 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
+.story .k.mech { color: var(--accent); }
+.story .date { font: 12px var(--mono); color: var(--faint); }
+.tag { display: inline-block; font: 600 11px/1 var(--mono); padding: 5px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+.tag.judg { background: var(--line); color: var(--muted); }
+.tag.warn { background: var(--warn-soft); color: var(--warn); }
+
+.arch svg { width: 100%; height: auto; display: block; }
+.arch .box { fill: var(--surface); stroke: var(--line); }
+.arch .box.hot { fill: var(--accent-soft); stroke: var(--accent); }
+.arch text { fill: var(--ink); font: 13px var(--sans); }
+.arch .lbl { font: 600 11px var(--mono); fill: var(--faint); letter-spacing: .06em; text-transform: uppercase; }
+.arch .small { fill: var(--muted); font-size: 12px; }
+.arch .edge { stroke: var(--faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.arch .edge.dash { stroke-dasharray: 4 4; }
+
+.chart { position: relative; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart .bar { fill: var(--accent); }
+.chart .bar.zero { fill: var(--line); }
+.chart .gap { fill: var(--warn-soft); }
+.chart .gapline { stroke: var(--warn); stroke-width: 1.2; }
+.chart text { font: 11px var(--mono); fill: var(--faint); }
+.chart .note { font: 600 12px var(--sans); fill: var(--warn); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font: 12px var(--mono); padding: 6px 8px; border-radius: 6px; opacity: 0; transform: translate(-50%, -120%); white-space: nowrap; transition: opacity .1s; }
+
+.timeline { list-style: none; padding: 0; margin: 0; border-left: 2px solid var(--line); }
+.timeline li { position: relative; padding: 0 0 18px 22px; }
+.timeline li::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); }
+.timeline li.no::before { border-color: var(--faint); }
+.timeline li.inc::before { border-color: var(--warn); }
+.timeline .v { font: 600 13px var(--mono); }
+.timeline .d { font: 12px var(--mono); color: var(--faint); margin-left: 8px; }
+.timeline p { margin: 2px 0 0; color: var(--muted); font-size: 14.5px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+td, th { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
+code { font: 13px var(--mono); background: var(--accent-soft); color: var(--ink); padding: 2px 6px; border-radius: 5px; }
+pre { font: 13px/1.6 var(--mono); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; overflow-x: auto; margin: 0; }
+.cap { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; }
+.meter { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 10px 0 6px; }
+.meter i { display: block; height: 100%; background: var(--accent); }
+footer { margin-top: 96px; color: var(--faint); font-size: 13px; border-top: 1px solid var(--line); padding-top: 20px; }
+@media (max-width: 760px) {
+  main { padding: 36px 16px 72px; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .grid2, .cap { grid-template-columns: 1fr; }
+  .story .row { grid-template-columns: 1fr; gap: 0; }
+  td, th { padding: 8px 6px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Personal project · in daily use since May 2026</div>
+  <h1>Personal OS</h1>
+  <p class="lede">A local-first memory layer that lets AI agents work with one person across months, tools and devices — without forgetting context, repeating mistakes, or leaking anything private.</p>
+  <div class="links">
+    <a class="btn primary" href="https://github.com/georgypevchikh/personal-os">View on GitHub</a>
+    <a class="btn" href="../docs/case-studies.md">Case studies</a>
+    <a class="btn" href="../docs/architecture.md">Architecture</a>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <section>
+    <div class="eyebrow">The idea</div>
+    <h2>Chat is where work happens. Files are where truth lives.</h2>
+    <p class="sub">Every agent session loads the same small, current picture of what is true, reads deeper only on demand, and writes back what it learned. Plain Markdown and git, so any runtime — and a phone — reads the same memory.</p>
+    <div class="card arch">
+      <svg viewBox="0 0 960 380" role="img" aria-label="Architecture: agent runtimes load an entry point and an orientation layer, read owners on demand, write memory streams; hooks and the pos CLI guard everything; git is the sync layer.">
+        <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--faint)"/></marker></defs>
+        <text class="lbl" x="20" y="28">Runtimes</text>
+        <rect class="box" x="20" y="40" width="190" height="150" rx="12"/>
+        <text x="40" y="74">Claude Code</text><text x="40" y="102">Codex</text><text x="40" y="130">Cursor</text><text x="40" y="158">Mobile client</text>
+
+        <text class="lbl" x="270" y="28">Orientation · ~10K tokens</text>
+        <rect class="box hot" x="270" y="40" width="250" height="150" rx="12"/>
+        <text x="290" y="70">current-context</text><text class="small" x="410" y="70">what is true</text>
+        <text x="290" y="96">block-state</text><text class="small" x="410" y="96">generated graph</text>
+        <text x="290" y="122">block-sync</text><text class="small" x="410" y="122">contract</text>
+        <text x="290" y="148">agent-soul</text><text class="small" x="410" y="148">behaviour</text>
+        <text x="290" y="174">today's log tail</text>
+
+        <text class="lbl" x="580" y="28">Owners · one per fact</text>
+        <rect class="box" x="580" y="40" width="170" height="150" rx="12"/>
+        <text x="600" y="74">8 domains</text><text x="600" y="102">4 projects</text><text x="600" y="130">1 system block</text><text class="small" x="600" y="158">56 dependency edges</text>
+
+        <text class="lbl" x="800" y="28">Sync</text>
+        <rect class="box" x="800" y="40" width="140" height="150" rx="12"/>
+        <text x="820" y="74">git remote</text><text class="small" x="820" y="100">backup +</text><text class="small" x="820" y="118">device sync</text>
+
+        <path class="edge" d="M210 115 H262"/>
+        <path class="edge" d="M520 115 H572"/>
+        <path class="edge" d="M750 115 H792"/>
+
+        <text class="lbl" x="270" y="238">Memory streams</text>
+        <rect class="box" x="270" y="250" width="250" height="110" rx="12"/>
+        <text x="290" y="282">session logs</text><text class="small" x="400" y="282">daily</text>
+        <text x="290" y="308">decision logs</text><text class="small" x="400" y="308">why it is so</text>
+        <text x="290" y="334">failure modes</text><text class="small" x="400" y="334">own mistakes</text>
+
+        <text class="lbl" x="580" y="238">Mechanisms</text>
+        <rect class="box hot" x="580" y="250" width="360" height="110" rx="12"/>
+        <text x="600" y="282">SessionStart hook</text><text class="small" x="760" y="282">injects orientation</text>
+        <text x="600" y="308">pre-commit hook</text><text class="small" x="760" y="308">stamp · validate · scan</text>
+        <text x="600" y="334">pos doctor · budget</text><text class="small" x="760" y="334">audit without memory</text>
+
+        <path class="edge" d="M115 190 V305 H262"/>
+        <path class="edge dash" d="M520 305 H572"/>
+        <path class="edge dash" d="M760 250 V198"/>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">How it was built</div>
+    <h2>Every mechanism exists because something broke</h2>
+    <p class="sub">The rule: if a rule is broken twice, turn it into a mechanism or delete it. The counter-rule: automate only what a machine can judge.</p>
+    <div class="grid2" id="stories"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Activity</div>
+    <h2>Six months of commits, including the outage</h2>
+    <p class="sub">Weekly commits to the private vault. The orange gap is not a holiday: a guard silently rejected every automatic backup for 63 days. The fix is case study 4.</p>
+    <div class="card chart" id="chart"><div class="tip" id="tip"></div></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Evolution</div>
+    <h2>Nine releases, each with a trigger</h2>
+    <p class="sub">Blue: a release. Grey: a decision not to build. Orange: an incident.</p>
+    <div class="grid2">
+      <ul class="timeline" id="tl1"></ul>
+      <ul class="timeline" id="tl2"></ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Tooling</div>
+    <h2>One CLI instead of a checklist</h2>
+    <p class="sub">Python, standard library only. 34 tests, including end-to-end commits through the real git hook.</p>
+    <div class="grid2">
+<pre>$ pos doctor
+[warn ] stale-owner   learning: `active` but
+                      owner untouched for 112 days
+[warn ] broken-link   … (38 found)
+doctor: 0 error, 42 warn, 31 info
+
+$ pos budget
+ 10,675  total (estimate)
+         target 20,000, max 25,000: ok</pre>
+      <table>
+        <tr><th>Command</th><th>Replaces</th></tr>
+        <tr><td><code>pos init</code></td><td>hand-copying a template vault</td></tr>
+        <tr><td><code>pos check</code></td><td>manual date stamps and a one-off script</td></tr>
+        <tr><td><code>pos doctor</code></td><td>a monthly LLM-driven checklist</td></tr>
+        <tr><td><code>pos budget</code></td><td>a token rule nobody measured</td></tr>
+        <tr><td><code>pos scan</code></td><td>trusting myself not to leak</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Next</div>
+    <h2>An AI layer with a hard $5 ceiling</h2>
+    <p class="sub">Code stops where meaning starts. A model gets exactly the three jobs a script cannot do — and is never a dependency.</p>
+    <div class="cap">
+      <div class="card">
+        <table>
+          <tr><th>Job</th><th>Est. / month</th></tr>
+          <tr><td>Propagation reviewer — does this change alter a public claim?</td><td>$2.90</td></tr>
+          <tr><td>Weekly review draft (batched, −50%)</td><td>$0.52</td></tr>
+          <tr><td>Missed failure-mode candidates</td><td>in the weekly job</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Budget guard</h3>
+        <div class="meter"><i style="width:68%"></i></div>
+        <div style="font:13px var(--mono);color:var(--muted)">≈ $3.40 of $5.00</div>
+        <p style="color:var(--muted);font-size:14.5px;margin:12px 0 0">A local ledger prices every call from the API's own usage numbers and refuses the next one if it would cross the cap. Over budget → the deterministic output, unchanged. Every prompt passes the same privacy gate as a public commit.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Honest limits</div>
+    <h2>What it is not yet</h2>
+    <p class="sub">Used daily by one person. External users are the next milestone, with one metric: minutes from <code>pos init</code> to a session where the agent correctly answers "what am I working on?" unprompted.</p>
+  </section>
+
+  <footer>Georgy Pevchikh · Personal OS · numbers measured on <span id="measured"></span> with <code>pos metrics</code> (aggregate-only).</footer>
+</main>
+
+<script id="snapshot" type="application/json">{
+  "schema": 1,
+  "generated_on": "2026-11-11",
+  "notes": {
+    "total": 229,
+    "words": 314586,
+    "by_area": {
+      "(root)": 4,
+      "00-meta": 90,
+      "10-self": 11,
+      "20-learning": 10,
+      "30-projects": 44,
+      "40-design-identity": 3,
+      "50-work": 1,
+      "60-money": 1,
+      "70-social-presence": 4,
+      "80-tools-ai": 5,
+      "90-archive": 56
+    }
+  },
+  "links": {
+    "total": 347,
+    "broken": 38,
+    "orphans": 31,
+    "notes_with_outgoing_pct": 24.5,
+    "avg_outgoing": 1.52
+  },
+  "blocks": {
+    "total": 13,
+    "dependency_edges": 56,
+    "by_kind": {
+      "domain": 8,
+      "project": 4,
+      "system": 1
+    },
+    "by_status": {
+      "active": 8,
+      "blocked": 1,
+      "developing": 1,
+      "live": 1,
+      "reserved": 2
+    },
+    "graph": {
+      "nodes": [
+        {
+          "id": "S1",
+          "kind": "system",
+          "status": "active"
+        },
+        {
+          "id": "D1",
+          "kind": "domain",
+          "status": "active"
+        },
+        {
+          "id": "D2",
+          "kind": "domain",
+          "status": "active"
+        },
+        {
+          "id": "D3",
+          "kind": "domain",
+          "status": "active"
+        },
+        {
+          "id": "D4",
+          "kind": "domain",
+          "status": "developing"
+        },
+        {
+          "id": "D5",
+          "kind": "domain",
+          "status": "reserved"
+        },
+        {
+          "id": "D6",
+          "kind": "domain",
+          "status": "reserved"
+        },
+        {
+          "id": "D7",
+          "kind": "domain",
+          "status": "active"
+        },
+        {
+          "id": "D8",
+          "kind": "domain",
+          "status": "active"
+        },
+        {
+          "id": "P1",
+          "kind": "project",
+          "status": "blocked"
+        },
+        {
+          "id": "P2",
+          "kind": "project",
+          "status": "active"
+        },
+        {
+          "id": "P3",
+          "kind": "project",
+          "status": "live"
+        },
+        {
+          "id": "P4",
+          "kind": "project",
+          "status": "active"
+        }
+      ],
+      "edges": [
+        [
+          "S1",
+          "D1"
+        ],
+        [
+          "S1",
+          "D2"
+        ],
+        [
+          "S1",
+          "D3"
+        ],
+        [
+          "S1",
+          "D4"
+        ],
+        [
+          "S1",
+          "D5"
+        ],
+        [
+          "S1",
+          "D6"
+        ],
+        [
+          "S1",
+          "D7"
+        ],
+        [
+          "S1",
+          "D8"
+        ],
+        [
+          "D1",
+          "D2"
+        ],
+        [
+          "D1",
+          "D3"
+        ],
+        [
+          "D1",
+          "D4"
+        ],
+        [
+          "D1",
+          "D5"
+        ],
+        [
+          "D1",
+          "D7"
+        ],
+        [
+          "D2",
+          "D1"
+        ],
+        [
+          "D2",
+          "D8"
+        ],
+        [
+          "D3",
+          "D1"
+        ],
+        [
+          "D3",
+          "D4"
+        ],
+        [
+          "D3",
+          "D5"
+        ],
+        [
+          "D3",
+          "D7"
+        ],
+        [
+          "D3",
+          "D8"
+        ],
+        [
+          "D3",
+          "P1"
+        ],
+        [
+          "D3",
+          "P2"
+        ],
+        [
+          "D3",
+          "P3"
+        ],
+        [
+          "D3",
+          "P4"
+        ],
+        [
+          "D4",
+          "D1"
+        ],
+        [
+          "D4",
+          "D3"
+        ],
+        [
+          "D4",
+          "D7"
+        ],
+        [
+          "D5",
+          "D1"
+        ],
+        [
+          "D5",
+          "D3"
+        ],
+        [
+          "D5",
+          "D6"
+        ],
+        [
+          "D6",
+          "D1"
+        ],
+        [
+          "D6",
+          "D5"
+        ],
+        [
+          "D7",
+          "D1"
+        ],
+        [
+          "D7",
+          "D3"
+        ],
+        [
+          "D7",
+          "D4"
+        ],
+        [
+          "D8",
+          "S1"
+        ],
+        [
+          "D8",
+          "D3"
+        ],
+        [
+          "P1",
+          "D3"
+        ],
+        [
+          "P1",
+          "D1"
+        ],
+        [
+          "P1",
+          "D5"
+        ],
+        [
+          "P1",
+          "D8"
+        ],
+        [
+          "P2",
+          "D3"
+        ],
+        [
+          "P2",
+          "D4"
+        ],
+        [
+          "P2",
+          "P4"
+        ],
+        [
+          "P2",
+          "D7"
+        ],
+        [
+          "P2",
+          "D8"
+        ],
+        [
+          "P3",
+          "D3"
+        ],
+        [
+          "P3",
+          "P4"
+        ],
+        [
+          "P3",
+          "D7"
+        ],
+        [
+          "P3",
+          "D8"
+        ],
+        [
+          "P4",
+          "D3"
+        ],
+        [
+          "P4",
+          "D1"
+        ],
+        [
+          "P4",
+          "P2"
+        ],
+        [
+          "P4",
+          "P3"
+        ],
+        [
+          "P4",
+          "D4"
+        ],
+        [
+          "P4",
+          "D7"
+        ]
+      ]
+    }
+  },
+  "memory": {
+    "session_logs": 29,
+    "decision_logs": 10,
+    "failure_modes": 15,
+    "decisions_by_month": {
+      "2026-05": 4,
+      "2026-07": 5,
+      "2026-09": 1
+    }
+  },
+  "git": {
+    "commits": 197,
+    "first": "2026-05-09",
+    "last": "2026-11-11",
+    "active_days": 30,
+    "longest_gap_days": 63,
+    "weekly": {
+      "2026-W19": 19,
+      "2026-W20": 44,
+      "2026-W21": 26,
+      "2026-W22": 0,
+      "2026-W23": 3,
+      "2026-W24": 5,
+      "2026-W25": 0,
+      "2026-W26": 5,
+      "2026-W27": 1,
+      "2026-W28": 0,
+      "2026-W29": 47,
+      "2026-W30": 21,
+      "2026-W31": 0,
+      "2026-W32": 0,
+      "2026-W33": 0,
+      "2026-W34": 0,
+      "2026-W35": 0,
+      "2026-W36": 0,
+      "2026-W37": 0,
+      "2026-W38": 0,
+      "2026-W39": 9,
+      "2026-W40": 0,
+      "2026-W41": 0,
+      "2026-W42": 0,
+      "2026-W43": 0,
+      "2026-W44": 0,
+      "2026-W45": 10,
+      "2026-W46": 7
+    }
+  },
+  "orientation": {
+    "tokens_estimate": 10675,
+    "target": 20000,
+    "max": 25000
+  }
+}
+</script>
+<script>
+const S = JSON.parse(document.getElementById("snapshot").textContent);
+const el = (tag, attrs = {}, html = "") => Object.assign(document.createElement(tag), attrs, { innerHTML: html });
+document.getElementById("measured").textContent = S.generated_on;
+
+const stats = [
+  [S.git.commits, "commits since " + S.git.first.slice(0, 7)],
+  [S.blocks.total + " · " + S.blocks.dependency_edges, "blocks · dependency edges, validated on every commit"],
+  [S.memory.failure_modes, "assistant failure modes, each with a prevention rule"],
+  ["~" + (S.orientation.tokens_estimate / 1000).toFixed(1) + "K", "tokens per cold start (ceiling " + S.orientation.max / 1000 + "K)"],
+];
+const statsEl = document.getElementById("stats");
+stats.forEach(([v, l]) => statsEl.append(el("div", { className: "stat" }, `<b>${v}</b><span>${l}</span>`)));
+
+const stories = [
+  ["2026-05", "Every new chat started from zero", "Context lived in my head; agents greeted with “hi” skipped orientation.", "A SessionStart hook injects current state, the block graph and today's log into every session."],
+  ["2026-05", "The assistant repeated its mistakes", "Corrections evaporated between sessions.", "A failure-mode catalog — trigger plus prevention rule — written in the same session, even for unnoticed mistakes."],
+  ["2026-07", "A change didn't reach what depended on it", "One owner per fact stopped contradictions, not stale consumers.", "Block registry + generated state. Code checks structure; meaning stays with the agent, by design."],
+  ["2026-09", "Backups silently stopped for 63 days", "A date rule rejected every auto-commit; the plugin hid the error.", "Guards may fix or fail loudly — never block silently. The hook now stamps the date itself."],
+  ["2026-07", "Chose not to build a mobile bot", "The obvious answer was a bot with hosting and 1–2 weeks of work.", "An existing client over the same git repo covered ~90% for $0. The best automation was the one I didn't write.", true],
+  ["2026-11", "The audit was a manual checklist", "An LLM counted files instead of judging.", `pos doctor. First run: 3 “active” domains untouched for 112 days, ${S.links.broken} broken links.`],
+];
+const storiesEl = document.getElementById("stories");
+stories.forEach(([d, t, p, m, no]) => storiesEl.append(el("div", { className: "card story" }, `
+  <div><span class="tag ${no ? "judg" : ""}">${no ? "judgment" : "mechanism"}</span> <span class="date">${d}</span><h3 style="margin-top:10px">${t}</h3></div>
+  <div class="row"><span class="k">Problem</span><span>${p}</span></div>
+  <div class="row"><span class="k mech">${no ? "Decision" : "Mechanism"}</span><span>${m}</span></div>`)));
+
+const tl = [
+  ["v0", "05-09", "Learning vault + one instruction file"],
+  ["v1", "05-12", "Personal OS skeleton: person, domains, system"],
+  ["v2", "05-13", "Thin mirrored entry points; behaviour split from protocols"],
+  ["v2.1", "05-13", "Scaling foundations, density triggers"],
+  ["v2.2", "05-18", "Hooks replace protocols the agent had to remember"],
+  ["v2.3", "05-21", "Dedup, orphans removed, owner frontmatter"],
+  ["no-bot", "07-03", "Mobile via existing client, $0", "no"],
+  ["sync", "07-14", "Cloud sync corrupted git → local + remote", "inc"],
+  ["v2.4", "07-16", "Secret guard, report-only health check"],
+  ["v2.5", "07-22", "Block registry + propagation contract"],
+  ["v2.5.1", "09-23", "After a 63-day silent backup outage: self-stamping hook", "inc"],
+  ["pos 0.1", "11-11", "Public CLI, doctor, budget, privacy gate, starter kit"],
+];
+tl.forEach(([v, d, p, cls], i) => document.getElementById(i < 6 ? "tl1" : "tl2")
+  .append(el("li", { className: cls || "" }, `<span class="v">${v}</span><span class="d">2026-${d}</span><p>${p}</p>`)));
+
+(function chart() {
+  const weeks = Object.entries(S.git.weekly);
+  const W = 960, H = 240, padL = 30, padB = 34, padT = 34;
+  const max = Math.max(...weeks.map(w => w[1]));
+  const bw = (W - padL) / weeks.length;
+  const y = v => H - padB - (v / max) * (H - padB - padT);
+  let gapStart = -1, gapEnd = -1, run = 0;
+  weeks.forEach(([, v], i) => { if (v === 0) { run++; if (run >= 6 && gapStart < 0) gapStart = i - run + 1; if (gapStart >= 0 && gapEnd < 0 && (i + 1 === weeks.length || weeks[i + 1][1] > 0)) gapEnd = i; } else run = 0; });
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly commits; a ${S.git.longest_gap_days}-day gap during a silent backup outage">`;
+  if (gapStart >= 0) {
+    const x0 = padL + gapStart * bw, x1 = padL + (gapEnd + 1) * bw;
+    svg += `<rect class="gap" x="${x0}" y="${padT - 8}" width="${x1 - x0}" height="${H - padB - padT + 8}" rx="6"/>`;
+    svg += `<text class="note" x="${(x0 + x1) / 2}" y="${padT + 22}" text-anchor="middle">${S.git.longest_gap_days} days: backups silently blocked</text>`;
+  }
+  [0, Math.round(max / 2), max].forEach(v => svg += `<text x="0" y="${y(v) + 4}">${v}</text>`);
+  weeks.forEach(([wk, v], i) => {
+    const x = padL + i * bw + bw * 0.18, h = Math.max(v ? 2 : 1.5, H - padB - y(v));
+    svg += `<rect class="bar ${v ? "" : "zero"}" data-k="${wk}" data-v="${v}" x="${x}" y="${H - padB - h}" width="${bw * 0.64}" height="${h}" rx="2"/>`;
+    if (i % 4 === 0) svg += `<text x="${x}" y="${H - 12}">${wk.replace("2026-", "")}</text>`;
+  });
+  const box = document.getElementById("chart");
+  box.insertAdjacentHTML("afterbegin", svg + "</svg>");
+  const tip = document.getElementById("tip");
+  box.querySelectorAll(".bar").forEach(b => {
+    b.addEventListener("mouseenter", () => {
+      const r = b.getBoundingClientRect(), c = box.getBoundingClientRect();
+      tip.textContent = `${b.dataset.k}: ${b.dataset.v} commits`;
+      tip.style.left = (r.left - c.left + r.width / 2) + "px"; tip.style.top = (r.top - c.top) + "px"; tip.style.opacity = 1;
+    });
+    b.addEventListener("mouseleave", () => tip.style.opacity = 0);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -e .
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: Unit + end-to-end tests
+        run: python -m unittest discover -s tests -t . -v
+      - name: Starter kit smoke test
+        run: |
+          git config --global user.name ci && git config --global user.email ci@example.com
+          pos init "$RUNNER_TEMP/vault" --owner "CI"
+          cd "$RUNNER_TEMP/vault"
+          git add -A && git commit -qm "init through the real pre-commit hook"
+          pos doctor && pos budget && pos metrics > /dev/null
+      - name: Privacy gate (pattern rules; the private denylist runs locally in pre-commit)
+        run: pos scan --allow-missing-denylist
